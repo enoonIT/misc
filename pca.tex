@@ -1,0 +1,96 @@
+\documentclass{article}
+
+\usepackage{listings}
+\usepackage{color}
+\usepackage{url}
+\usepackage{amsmath}
+\usepackage{amsthm}
+
+\input{symbol.tex}
+
+\title{Machine Learning 2016/17, Homework 1. Principal Component Analysis and Na\"{i}ve Bayes Classification}
+
+\begin{document}
+
+\maketitle
+
+\paragraph{General information.} Problem solutions should be submitted in PDF format in report style (no source code listings required). \\
+All reports must be submitted by email (\url{fabiom.carlucci@dis.uniroma1.it}), with subject ``\verb![ML1617] PCA report!''.
+It is advised to use Python as a programming language, but you can use any language of your choice (at your own risk).
+In case you use Python, free \verb!Anaconda! distribution comes with all needed packages:
+\begin{itemize}
+\item[] \url{https://www.continuum.io/downloads}
+\end{itemize}
+In particular, you might find useful \verb!scikit-learn! general machine learning library and \verb!matplotlib! plotting facilities. When in doubt, read the manual and take a look at the large set of examples:
+\begin{itemize}
+\item[] \url{http://scikit-learn.org/stable/documentation.html}
+\item[] \url{http://scikit-learn.org/stable/auto_examples/}
+\item[] \url{http://matplotlib.org/examples/}
+\end{itemize}
+
+\paragraph{Data preparation.} In this homework you will work with the \verb!COIL-100! dataset of $100$ visual object categories.
+The dataset contains $\approx 7000$, $128\times 128$ colored images with subtracted background. Steps:
+%
+\begin{enumerate}
+\item Download and unpack dataset from~\url{http://www.cs.columbia.edu/CAVE/databases/SLAM_coil-20_coil-100/coil-100/coil-100.zip}.
+\item Read raw pixels of all images for four classes of your choice.
+In python you can do so by:
+\begin{lstlisting}[language=Python]
+from PIL import Image  # or 'import Image'
+import numpy as np
+img_data = np.asarray(Image.open('<path-to-image>'))
+\end{lstlisting}
+This will give you a $3$-d array, where the last dimension specifies color of a pixel in RGB.
+\item Convert every image into a $49152$-dimensional vector and prepare $n \times 49152$ matrix $\boldsymbol{X}$, where $n$ is the number of images you have read.
+We refer to the rows of $\boldsymbol{X}$ as \emph{examples} and to columns as \emph{features}.
+Next, prepare an $n$-dimensional vector $\boldsymbol{y}$ holding ordinal labels of your image.
+
+Note that in python you can get vectorial representation of your $3$-d array image array by:
+\begin{lstlisting}[language=Python]
+x = img_data.ravel()
+\end{lstlisting}
+\end{enumerate}
+
+\paragraph{Principal Component Visualization.}
+\begin{enumerate}
+\item Standardize $\boldsymbol{X}$ (make each feature zero-mean and unit-variance).
+\item Use Principal Component Analysis (PCA) to extract first two principal components from sample covariance matrix of $\boldsymbol{X}$. Project $\boldsymbol{X}$ onto those two components.
+%If you use python, make use of
+You can do it in python by running:
+\begin{lstlisting}[language=Python]
+from sklearn.decomposition import PCA
+X_t = PCA(2).fit_transform(X)
+\end{lstlisting}
+\item Visualize \verb!X_t! using scatter-plot with different colors standing for different classes:
+\begin{lstlisting}
+import matplotlib.pyplot as plt
+plt.scatter(X_t[:, 0], X_t[:, 1], c=y)
+\end{lstlisting}
+Repeat this exercise when considering third and fourth principal component, and then tenth and eleventh.
+What do you notice? Justify your answer from theoretical perspective behind PCA.
+\item How would you decide on the number of principal components needed to preserve data without much distortion?
+%What are the eigenvalues of top three?
+%How many principal components are needed to explain at least $95\%$ of variance in the data? Justify your answer.
+%\item Project $\boldsymbol{X}$ onto top two principal components and scatter-plot them with different colors standing for different classes. Do the same for the next two principal components.
+\end{enumerate}
+
+\paragraph{Classification.}
+\begin{enumerate}
+\item Write down formulation of Na\"{i}ve Bayes classifier
+\[
+\widehat{y} = \argmax_{y \in \{1, \ldots, k\}} p(y \ | \ \bx_1, \ldots, \bx_d)~,
+\]
+where $\widehat{y}$ is a predicted label, $k$ is the number of classes, $\{\bx_i\}_{i=1}^d$ are examples,
+$p(\bx \ | \ y)$ is a Gaussian, and distribution of labels is uniform.
+\item Split examples in $\boldsymbol{X}$ and $\by$ into training and testing set.
+You can use \verb!train_test_split! from \verb!sklearn.cross_validation! package.
+\item Train and test Na\"{i}ve Bayes classifier with Gaussian class-conditional distribution. You can use \verb!GaussianNB! from package \verb!from sklearn.naive_bayes! for this purpose.
+\item Repeat the splitting, training, and testing for the data projected onto first two principal components,
+then third and fourth principal components. Compare results: what are your conclusions?
+\item (Optional) Visualize decision boundaries of the classifier.
+\end{enumerate}
+
+\bibliographystyle{plain}
+\bibliography{common}
+
+\end{document}

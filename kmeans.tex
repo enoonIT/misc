@@ -1,0 +1,127 @@
+\documentclass{article}
+
+\usepackage{listings}
+\usepackage{color}
+\usepackage{url}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage[nolist,nohyperlinks]{acronym}
+
+\input{symbol.tex}
+\input{acronym.tex}
+
+
+\title{AIML-15: Machine Learning, Homework 3. K-Means, GMM+EM, and Clustering Evaluation}
+
+\begin{document}
+
+
+
+\maketitle
+
+\paragraph{General information.} Problem solutions should be submitted in PDF format in report style (no source code listings required).
+All reports must be submitted before December $20$ to the moodle (elearning) system.
+It is advised to use Python as a programming language, but you can use any language of your choice (at your own risk).
+In case you use Python, free \verb!Anaconda! distribution comes with all needed packages:
+\begin{itemize}
+\item[] \url{https://www.continuum.io/downloads}
+\end{itemize}
+In particular, you might find useful \verb!scikit-learn! general machine learning library and \verb!matplotlib! plotting facilities. When in doubt, read the manual and take a look at the large set of examples:
+\begin{itemize}
+\item[] \url{http://scikit-learn.org/stable/documentation.html}
+\item[] \url{http://scikit-learn.org/stable/auto_examples/}
+\item[] \url{http://matplotlib.org/examples/}
+\end{itemize}
+
+\paragraph{Data preparation.} In this homework you will work with the \verb!MNIST!~\cite{lecun1998mnist} dataset composed from $10$ classes of handwritten digits.
+The dataset contains $\approx 70000$, $28\times 28$ images. Steps:
+\begin{itemize}
+\item If you are using Python and \verb!scikit-learn!, you can get training data by running:
+\begin{lstlisting}[language=Python]
+from sklearn.datasets import fetch_mldata
+mnist = fetch_mldata('MNIST original')
+X = mnist.data    # 70000 by 784 matrix of instances
+y = mnist.target  # 70000 vector of labels
+\end{lstlisting}
+This might take some time  when you execute it for the first time, because this command will download the dataset.
+\item If you are using Matlab, you can use~\url{http://www.cs.nyu.edu/~roweis/data/mnist_all.mat}.
+\item Otherwise, in binary format from~\url{http://yann.lecun.com/exdb/mnist/}.
+\end{itemize}
+
+\paragraph{Clustering with K-Means.}
+\begin{itemize}
+\item Select the subset of $\bX$ and $\by$, which belongs only to classes $\{0,1,2,3,4\}$, with $200$ examples per class.
+\item Cluster $\bX$ using K-Means into $5$ clusters.
+An example of clustering in Python would be,
+\begin{lstlisting}
+from sklearn.cluster import KMeans
+clusterer = KMeans(5, 'random')
+clusterer.fit(X)
+\end{lstlisting}
+\item Plot obtained cluster centroids as images. You can use \verb!pylab.imshow()!.
+\item Repeat clustering and visualization for $3$ clusters and $10$ clusters. Which characteristic of the data is captured by the centroids?
+\end{itemize}
+
+\paragraph{Clustering with GMM/EM, and Performance Evaluation.}
+\begin{itemize}
+\item Cluster $\bX$ multiple times using GMM when number of clusters varies is in $\{2, 3, \ldots, 10\}$.
+An example of clustering in Python would be,
+\begin{lstlisting}
+from sklearn.mixture import GMM
+clusterer = GMM(5, 'diag')
+clusterer.fit(X)
+cluster_labels = clusterer.predict(X)
+\end{lstlisting}
+\item Compute cluster purity for every choice of number of clusters, and plot number of clusters against the purity.
+\item Explain your observation.
+\end{itemize}
+
+\paragraph{Classifying with GMM/EM.}
+In this assignment you're asked to construct a classifier through \emph{generative} modeling, that is, every class will be modeled by a mixture of Gaussians.
+Guidelines:
+\begin{itemize}
+\item For every class in $\bX$, fit a GMM model as in previous problem. %Decide yourself on the number of clusters.
+\item For every point in the testing set, obtain the log-likelihood of that a point, and decide the label as index of the GMM with the highest log-likelihood.
+In Python, you can use function \verb!clusterer.score_samples()!.
+In other words, let the prediction rule, given testing points $\bx$, be:
+\[
+f(\bx) = \argmax_{y \in \{1, \ldots, N\}} \log\left(p(\bx \ | \ \bar{\Sigma}_y, \bar{\mu}_y, \bar{\theta}_y) \right)~,
+\]
+where $N$ is the number of classes, and $y$-th mixture model is characterized by the parameters,
+\begin{align*}
+&\bar{\Sigma}_y = \{\boldsymbol{\Sigma}_{y,1}, \ldots, \boldsymbol{\Sigma}_{y,K}\}~, \tag{Covariances}\\
+&\bar{\mu}_y = \{\boldsymbol{\mu}_{y,1}, \ldots, \boldsymbol{\mu}_{y,K}\}~, \tag{Means}\\
+&\bar{\theta}_y = \{\theta_{y,1}, \ldots, \theta_{y,K}\}~. \tag{Mixture weights}
+\end{align*}
+\item Report performance of this classifier on the testing set, varying number of components in each mixture in $\{2, 3, 4, 5\}$.
+\item (Optional) Select number of components $K$ using validation set or cross-validation.
+\item (Optional) Compare to non-linear SVM.
+\end{itemize}
+
+% \paragraph{Training Multiclass Non-Linear \ac{SVM}.}
+% \begin{itemize}
+% \item From $\bX$ and $\by$ select examples which belong only to classes $0,1,2,3,4$.
+% \item Standardize, shuffle, and split selected data into the training and testing sets as $50/50\%$ in a \emph{stratified} way.
+% Stratified means that all classes should be represented in both training and testing sets, according to the splitting ratio.
+% Consider label set $y = \{1,1,2,2,3,3,3,3\}$, where example of stratified splitting is , $y_{\text{train}} = \{1, 2, 3, 3\}$, and $y_{\text{test}} = \{1, 2, 3, 3\}$,
+% and a counter-example would be $y_{\text{train}} = \{1, 3, 3, 3\}$, and $y_{\text{test}} = \{2, 2, 3, 3\}$.
+% Why is it important to do stratified splitting?
+% \item Train a multiclass non-linear \ac{SVM} with Gaussian kernel function in \ac{OVA} way. You can train and get margin values of a binary non-linear \ac{SVM} like this:
+% \begin{lstlisting}
+% from sklearn.svm import SVC
+% cls = SVC(C=0.000001, kernel='rbf', gamma=10000)
+% cls.fit(X_train, y_train)    # Train on X_train, y_train
+% # Margin (decision) values of classifier
+% margins = cls.decision_function(X_test)    
+% \end{lstlisting}
+% \item How can you use it in for multiclass \ac{OVA} classification? Write down a short explanation.
+% \item Train multiclass non-linear \ac{SVM} and report the accuracy on the testing set.
+% \item Tune $C$ and $\gamma$ values of multiclass non-linear \ac{SVM} using the \emph{grid search}, to give the best performance. Remember, you cannot touch testing set during tuning!
+% Explain your steps for tuning these hyper-parameters.
+% Finally, when you have tuned everything, report the accuracy of the classifier on the testing set.
+% \end{itemize}
+
+\bibliographystyle{plain}
+\bibliography{common}
+
+\end{document}
